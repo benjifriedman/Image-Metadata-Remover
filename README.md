@@ -2,6 +2,8 @@
 
 **Image Metadata Remover** is a simple tool to remove metadata, including sensitive location data, from your images. The tool is provided as a single HTML file for easy use in any modern browser.
 
+Live instance here: [Image Metadata Remover](https://benjifriedman.github.io/Image-Metadata-Remover/)
+
 ---
 
 ## Features
