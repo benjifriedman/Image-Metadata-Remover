@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Metadata Remover</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .drop-zone:hover {
+            background-color: #f8f8f8;
+        }
+        #preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Metadata Remover</h1>
+    <p>Drop an image or click to select</p>
+    
+    <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <p>Drop image here or click to upload</p>
+    </div>
+    
+    <img id="preview" alt="Preview">
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+
+        // Handle click to upload
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#000';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#ccc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            // Show preview
+            preview.style.display = 'block';
+            preview.src = URL.createObjectURL(file);
+
+            // Create a canvas to strip metadata
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // When image loads, draw it to canvas and download
+            preview.onload = () => {
+                canvas.width = preview.naturalWidth;
+                canvas.height = preview.naturalHeight;
+                ctx.drawImage(preview, 0, 0);
+                
+                // Convert to blob and download
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `clean_${file.name}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, file.type);
+            };
+        }
+    </script>
+</body>
+</html>
