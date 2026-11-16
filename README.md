@@ -45,16 +45,6 @@ JPEGs are re-encoded with the browser’s default quality. PNG inputs produce PN
 
 ---
 
-## Check GPS removal and portrait orientation
-
-Open the page and select `tests/gps-orientation.jpg`. The fixture stores a 48 × 32 image, a 90° clockwise orientation tag, and synthetic GPS coordinates. The downloaded JPEG should measure 32 × 48 pixels with red on top and blue below. With ExifTool installed, inspect both files:
-
-```sh
-exiftool -G1 -a -GPS:all -Orientation -ImageWidth -ImageHeight tests/gps-orientation.jpg ~/Downloads/clean_gps-orientation.jpg
-```
-
-Only the original should list GPS or orientation tags.
-
 ## Contributing
 
 If you'd like to improve this tool:
