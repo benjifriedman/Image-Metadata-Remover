@@ -32,13 +32,15 @@
 </head>
 <body>
     <h1>Image Metadata Remover</h1>
-    <p>Drop an image or click to select</p>
+    <p>Create a still copy without embedded personal metadata. Processing stays in your browser.</p>
     
     <div class="drop-zone" id="dropZone">
         <input type="file" id="fileInput" accept="image/*" style="display: none;">
-        <p>Drop image here or click to upload</p>
+        <p>Drop an image here or <button type="button">choose a file</button></p>
     </div>
     
+    <p id="status" role="status"></p>
+    <a id="download" hidden>Download cleaned image</a>
     <img id="preview" alt="Preview">
 
     <script>
@@ -47,7 +49,9 @@
         const preview = document.getElementById('preview');
 
         // Handle click to upload
-        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('click', (event) => {
+            if (event.target !== fileInput) fileInput.click();
+        });
 
         // Handle drag and drop
         dropZone.addEventListener('dragover', (e) => {
@@ -70,38 +74,57 @@
             handleFile(e.target.files[0]);
         });
 
-        function handleFile(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                alert('Please upload an image file');
-                return;
+        const status = document.getElementById('status');
+        const download = document.getElementById('download');
+        const extensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+        let latest = 0;
+        let resultUrl;
+
+        async function handleFile(file) {
+            if (!file) return;
+            const request = ++latest;
+            fileInput.value = '';
+            download.hidden = true;
+            download.removeAttribute('href');
+            preview.style.display = 'none';
+            preview.removeAttribute('src');
+            if (resultUrl) URL.revokeObjectURL(resultUrl);
+            resultUrl = null;
+            status.textContent = 'Preparing your image…';
+
+            const sourceUrl = URL.createObjectURL(file);
+            try {
+                const image = new Image();
+                image.src = sourceUrl;
+                await image.decode();
+                if (request !== latest) return;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                const type = Object.hasOwn(extensions, file.type) ? file.type : 'image/png';
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, type));
+                if (request !== latest) return;
+                if (!blob || !extensions[blob.type]) throw new Error('Export failed');
+
+                const extension = extensions[blob.type];
+                const base = file.name.replace(/\.[^.]*$/, '') || 'image';
+                resultUrl = URL.createObjectURL(blob);
+                preview.src = resultUrl;
+                preview.style.display = 'block';
+                download.href = resultUrl;
+                download.download = `clean_${base}.${extension}`;
+                download.hidden = false;
+                status.textContent = `Created a still ${extension.toUpperCase()} copy. Download: ${download.download}`;
+                download.click();
+            } catch {
+                if (request === latest) {
+                    status.textContent = 'Could not read or export this image. Try a JPEG or PNG copy.';
+                }
+            } finally {
+                URL.revokeObjectURL(sourceUrl);
             }
-
-            // Show preview
-            preview.style.display = 'block';
-            preview.src = URL.createObjectURL(file);
-
-            // Create a canvas to strip metadata
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            // When image loads, draw it to canvas and download
-            preview.onload = () => {
-                canvas.width = preview.naturalWidth;
-                canvas.height = preview.naturalHeight;
-                ctx.drawImage(preview, 0, 0);
-                
-                // Convert to blob and download
-                canvas.toBlob((blob) => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `clean_${file.name}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, file.type);
-            };
         }
     </script>
 </body>
