@@ -20,19 +20,14 @@ Live instance here: [Image Metadata Remover](https://benjifriedman.github.io/Ima
 ## Usage
 
 1. Open `index.html` in your browser.
-2. Click "Upload Image" and select the file you want to clean.
-3. The tool will process the image and remove all metadata.
-4. Download the cleaned image using the provided download button.
+2. Click “choose a file” or drop an image onto the page.
+3. A cleaned still copy downloads automatically. Use “Download cleaned image” to save it again.
 
----
+## How it works
 
-## How It Works
+The browser draws the decoded image onto a canvas and encodes a new file. This drops original embedded personal metadata such as GPS coordinates, camera details, capture time, and text comments. The browser may add technical information such as dimensions or resolution. The download retains the original base filename with a `clean_` prefix, so rename it if the filename itself contains sensitive information.
 
-This tool uses JavaScript to manipulate image data entirely within your browser. It ensures:
-- **Privacy**: No images are uploaded or processed on external servers.
-- **Efficiency**: The processing is done instantly on your local machine.
-
----
+JPEGs are re-encoded with the browser’s default quality. PNG inputs produce PNGs. WebP inputs produce WebP when the browser supports exporting it. Other readable formats and unsupported output formats become PNG. Animation becomes a single still image. HEIC input support depends on the browser. The original file stays untouched.
 
 ## Setup
 
